@@ -33,14 +33,13 @@ class QSBK:
         pageCode = self.getPage(pageIndex)
         if not pageCode:
             return None
-        pattern = re.compile('<div.*?content">.*?<span>(.*?)</span>.*?</div>(.*?)',re.S)
+        pattern = re.compile('<div.*?content">.*?<span>(.*?)</span>.*?</div>.*?<span.*?vote">.*?number">(.*?)</i>',re.S)
         items = re.findall(pattern, pageCode)
         pageStores = []
         for item in items:
             replaceBr = re.compile('<br/>')
             text = re.sub(replaceBr,"\n",item[0])
-            pageStores.append(text)
-            #print item[0]
+            pageStores.append([item[1],text.strip()])
         return pageStores
 
     def loadPage(self):
@@ -56,10 +55,10 @@ class QSBK:
             if input == "Q":
                 self.enable = False
                 return
-            print u"第%d页 %s" %(page, story)
+            print u"第%d页\n赞:%s\n%s" %(page, story[0], story[1])
 
     def start(self):
-        print u"正在抓去糗事百科，按回车查看新段，Q退出"
+        print u"正在抓去糗事百科，按回车查看新段子，Q退出"
         self.enable = True
         nowPage = 0
         while self.enable:
