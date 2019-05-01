@@ -7,9 +7,16 @@ from telebot import apihelper
 import requests
 from bs4 import BeautifulSoup
 import time
+import yaml
 
-TOKEN = 'XXXXX'
-bot = telebot.TeleBot(TOKEN)
+f = open('config.yaml')
+if f == None:
+    print('缺少配置文件')
+    exit(0)
+config = yaml.safe_load(f)
+
+
+bot = telebot.TeleBot(config['TOKEN'])
 apihelper.proxy = {'http': 'http://127.0.0.1:1087', 'https': 'http://127.0.0.1:1087'}
 logger = telebot.logger
 telebot.logger.setLevel(logging.ERROR)
@@ -38,28 +45,54 @@ def get_eos():
         return  u'服务异常 http错误码：%d' % resp.status_code
 
 def get_m2():
-    url = 'http://xx.xx.xx.xx:19081'
-    param = {'username': '***', 'password':'0000'}
-    #headers = {'Host': '101.37.12.15:19081','User-Agent':'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.108 Safari/537.36'}
+    url = config['M2GMURL']
+    param = {'username': config['NAME'], 'password':config['PASSWORD']}
     rs = requests.session()
     resp = rs.post(url + '/adminUserAuthentication.lc',data=param)
     if resp.status_code == 200:
+        # 获取订单
         param = {'startTime': '', 'endTime': '', 'orderNO':'', 'playerID':0,'payType':'','productType':''}
         orderlist = rs.post(url + '/manage_pay_order.do', data=param)
+        ret = ''
         if orderlist.status_code == 200 :
             order = orderlist.json()
-            ret = ''
             i = 0
             for pay in order['data']:
                 if i > 3:
                     break
                 i = i + 1
-                ret = ret + u'{0} 订单数: {1} 金额: {2} 独立用户: {3}\n'.format( pay['day'], pay['order_count'], pay['totalpay'], pay['players'])
-            return ret
+                ret = ret + u'{0} 订单数：{1} 金额：{2} 独立用户：{3}\n'.format( pay['day'], pay['order_count'], pay['totalpay'], pay['players'])
         else:
-            return u'服务异常 http错误码：%d' % resp.status_code
+            ret =  u'获取订单服务异常 http错误码：%d' % resp.status_code
+
+        # 获取每日统计
+        dashboard = rs.post(url + '/dashboard.lc')
+        ret = ret + '\n'
+        if dashboard.status_code == 200:
+            soup_text = BeautifulSoup(dashboard.text, 'html.parser')
+            data = soup_text.find_all('tr', class_='text-c')
+            i = 0
+            for a in data:
+                if i == 0:
+                    i = i + 1
+                    continue
+                if i > 3:
+                    break
+                td = a.find_all('td')
+                i = i + 1
+                date = td[0].text.replace('\n', '').replace(' ', '')
+                new_add = td[2].text.replace('\n', '').replace(' ', '')
+                card = td[13].text.replace('\n', '').replace(' ', '')
+                login = td[14].text.replace('\n', '').replace(' ', '')
+                dau = td[15].text.replace('\n', '').replace(' ', '')
+                ret = ret + u'{0} 新增：{1} 耗卡：{2} 登录：{3} 活跃：{4}\n'.format(date, new_add, card, login, dau)
+                pass
+        else:
+            ret + u'获取统计服务异常 http错误码：%d' % resp.status_code
+            pass
+        return ret
     else:
-        return u'服务异常 http错误码：%d' % resp.status_code
+        return u'登录服务异常 http错误码：%d' % resp.status_code
 
 def get_m2_report():
     pass
