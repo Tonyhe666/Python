@@ -11,7 +11,7 @@ import json
 def callbackfunc(blocknum,blockSize, totalSize):
     percent = 100*blocknum*blockSize/totalSize
     if percent == 100:
-        print u'###当前大小：%02f, 总大小：%02f,****%.2f%% ###' %( blocknum*blockSize, totalSize, percent)
+        print( u'###当前大小：%02f, 总大小：%02f,****%.2f%% ###' %( blocknum*blockSize, totalSize, percent))
 
 def download(url,name):
     path = '../bsj/' + name + '.mp4'
@@ -21,14 +21,14 @@ def download(url,name):
 
 def print_dic(dic):
     for k,v in dic.items():
-        print k,v
+        print(k,v)
 
 def print_list(list):
     for i in list:
         if type(i) == type({}):
             print_dic(i)
         else:
-            print i
+            print(i)
 
 
 def gethtml(page):
@@ -79,5 +79,5 @@ def gethtml(page):
 URL= r'https://api.amemv.com/aweme/v1/discover/search/?iid=24607383639&device_id=34943414774&os_api=18&app_name=aweme&channel=App%20Store&idfa=454C6328-7459-4C2B-93E8-3B97C9E02E9D&device_platform=iphone&build_number=17201&vid=73922B00-896C-4178-AFDE-A6DE7E25C53C&openudid=22076ed81b3351e95149983f2dcf3a6de53c7c7d&device_type=iPhone9,2&app_version=1.7.2&version_code=1.7.2&os_version=11.2.1&screen_width=1242&aid=1128&ac=WIFI&count=20&cursor=0'\
      +'&keyword=%s&search_source=discover&type=1&as=a175f08950b2ea5826&ts=1519781920' % '56067282'
 res = requests.get(URL)
-print res.text
+print( res.text)
 json.loads(res.text)

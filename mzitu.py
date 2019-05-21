@@ -12,14 +12,14 @@ class Mzitu():
         return requests.get(url, self.headers)
 
     def download_img(self,img_url, referer):
-        print u"正在下载..." + img_url
+        print( u"正在下载..." + img_url)
         path = img_url[-17:-10]
         path = str(path).replace("/",'-')
         self.mkdir(path)
         name = img_url[-9:-4]
         is_file_exist = os.path.isfile(name + '.jpg')
         if is_file_exist:
-            print name + u"存在，返回"
+            print( name + u"存在，返回")
             return
         httpheader = self.headers
         httpheader["Referer"] = referer

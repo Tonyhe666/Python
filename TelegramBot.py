@@ -15,6 +15,8 @@ if f == None:
     exit(0)
 config = yaml.safe_load(f)
 
+#pm2.5数据
+#http://www.pm25.in/api/querys/pm2_5.json?city=beijing&token=3817881004&stations=no
 
 bot = telebot.TeleBot(config['TOKEN'])
 apihelper.proxy = {'http': 'http://127.0.0.1:1087', 'https': 'http://127.0.0.1:1087'}
@@ -61,7 +63,7 @@ def get_m2():
                 if i > 3:
                     break
                 i = i + 1
-                ret = ret + u'{0} 订单数：{1} 金额：{2} 独立用户：{3}\n'.format( pay['day'], pay['order_count'], pay['totalpay'], pay['players'])
+                ret = ret + u'`{0} 订单数：{1} 金额：{2} 独立用户：{3}`\n'.format( pay['day'], pay['order_count'], pay['totalpay'], pay['players'])
         else:
             ret =  u'获取订单服务异常 http错误码：%d' % resp.status_code
 
@@ -85,7 +87,7 @@ def get_m2():
                 card = td[13].text.replace('\n', '').replace(' ', '')
                 login = td[14].text.replace('\n', '').replace(' ', '')
                 dau = td[15].text.replace('\n', '').replace(' ', '')
-                ret = ret + u'{0} 新增：{1} 耗卡：{2} 登录：{3} 活跃：{4}\n'.format(date, new_add, card, login, dau)
+                ret = ret + u'`{0} 新增：{1} 耗卡：{2} 登录：{3} 活跃：{4}`\n'.format(date, new_add, card, login, dau)
                 pass
         else:
             ret + u'获取统计服务异常 http错误码：%d' % resp.status_code
@@ -104,13 +106,13 @@ def send_welcome(message):
         bot.reply_to(message, hello + u'我是一个电报机器人, 可以快速的帮你做一些事情 你可以试试一下命令 /eos  /m2  /weather')
         pass
     elif message.content_type == u'text' and message.text == u'/weather' :
-        bot.reply_to(message, hello + get_weather())
+        bot.reply_to(message, hello + get_weather(),parse_mode='Markdown')
         pass
     elif message.content_type == u'text' and message.text == u'/m2':
-        bot.reply_to(message, hello + get_m2())
+        bot.reply_to(message, hello + get_m2(), parse_mode='Markdown')
         pass
     elif message.content_type == u'text' and message.text == u'/eos':
-        bot.reply_to(message, hello + get_eos())
+        bot.reply_to(message, hello + get_eos(), parse_mode='Markdown')
         pass
     #bot.delete_message(message.chat.id, message.message_id)
 

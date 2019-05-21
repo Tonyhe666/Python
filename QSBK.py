@@ -1,9 +1,8 @@
 
 # -*- coding:utf-8 -*-
 import urllib
-import urllib2
+import requests
 import re
-import thread
 import time
 
 
@@ -16,18 +15,9 @@ class QSBK:
         self.enable = False
 
     def getPage(self, pageIndex):
-        try:
-            url = 'http://www.qiushibaike.com/hot/page/' + str(pageIndex)
-            request = urllib2.Request(url,headers=self.headers)
-            response = urllib2.urlopen(request)
-            pageCode = response.read().decode('utf-8')
-            return  pageCode
-        except urllib2.URLError,e:
-            if hasattr(e,'code'):
-                print e.code
-            if hasattr(e,'reason'):
-                print e.reason
-            return None
+        url = 'http://www.qiushibaike.com/hot/page/' + str(pageIndex)
+        pageCode = requests.get(url, headers=self.headers)
+        return pageCode
 
     def getPageItem(self, pageIndex):
         pageCode = self.getPage(pageIndex)
@@ -51,14 +41,14 @@ class QSBK:
 
     def getOneStory(self,pageStories,page):
         for story in pageStories:
-            input = raw_input()
+            input = input()
             if input == "Q":
                 self.enable = False
                 return
-            print u"第%d页\n赞:%s\n%s" %(page, story[0], story[1])
+            print( u"第%d页\n赞:%s\n%s" %(page, story[0], story[1]))
 
     def start(self):
-        print u"正在抓去糗事百科，按回车查看新段子，Q退出"
+        print( u"正在抓去糗事百科，按回车查看新段子，Q退出")
         self.enable = True
         nowPage = 0
         while self.enable:
