@@ -7,6 +7,8 @@ import time
 import yaml
 from flask_restful import Resource,Api
 import flask
+from flask_apscheduler import APScheduler
+
 
 f =open('config.yaml')
 if f == None:
@@ -49,6 +51,21 @@ def get_eos():
     except:
         return u'服务异常'
 
+def get_eos2():
+    try:
+        resp = requests.get('https://api.coinmarketcap.com/v1/ticker/eos/?convert=CNY')
+        resp.raise_for_status()
+        strjson = resp.json()
+        msg = u"当前价格：{0}\n".format(strjson[0]['price_cny'][:6])
+        msg = msg + u'1小时变化：{0}%\n'.format(strjson[0]['percent_change_1h'])
+        msg = msg + u'24小时变化：{0}%\n'.format(strjson[0]['percent_change_24h'])
+        msg = msg + u'7天变化：{0}%'.format(strjson[0]['percent_change_7d'])
+        print msg
+        return msg
+    except:
+        return u'服务异常'
+
+
 def get_m2():
     try:
         url = config['M2GMURL']
@@ -83,6 +100,9 @@ def get_m2():
     except:
         return u'服务异常'
 
+def cronBTCInfo():
+    get_eos2()
+
 @bot.message_handler(commands=commonds)
 def handle_commands(message):
     hello = u'Hi %s:\n' % message.from_user.first_name
@@ -96,7 +116,7 @@ def handle_commands(message):
         bot.reply_to(message, hello + get_m2(), parse_mode='Markdown')
         pass
     elif message.content_type == u'text' and message.text == u'/eos':
-        bot.reply_to(message, hello + get_eos())
+        bot.reply_to(message, hello + get_eos2())
         pass
 
 class telegramWebhook(Resource):
@@ -107,19 +127,45 @@ class telegramWebhook(Resource):
                 update = telebot.types.Update.de_json(json_string)
                 bot.process_new_updates([update])
             except:
-                flask.abort(403)
+                pass
             return ''
         else:
-            flask.abort(403)
+            return ''
+
+class Config(object):
+    JOBS = [
+        {
+            'id':'eosinfo',
+            'func':'TelegramBot:get_eos2',
+            'args':None,
+            'trigger':{
+                'type':'cron',
+                'day_of_week': '0-6',
+                'hour': '10',
+                'minute': 0,
+                'second': 0,
+            },
+
+        }
+    ]
+
+    SCHEDULER_API_ENABLED = True
+
 
 if __name__ == '__main__':
-    bot.remove_webhook()
-    time.sleep(0.1)
-    bot.set_webhook(url=config['WEBHOOK'])
     app = flask.Flask(__name__)
     api = Api(app)
     api.add_resource(telegramWebhook, '/webhook')
-    app.run(host='0.0.0.0',
-        port=config['PORT'],
-        ssl_context=(config['SSLPEM'], config['SSLKEY'])
-	)
+    bot.remove_webhook()
+    time.sleep(0.1)
+    bot.set_webhook(url=config['WEBHOOK'])
+    app.config.from_object(Config())
+    scheduler = APScheduler()
+    scheduler.init_app(app)
+    scheduler.start()
+    app.run(
+        #debug=True
+    #host='0.0.0.0' ,
+    #port=config['PORT'],
+    #ssl_context=(config['SSLPEM'], config['SSLKEY'])
+     )
