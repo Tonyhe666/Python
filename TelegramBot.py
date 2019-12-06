@@ -60,7 +60,7 @@ def get_eos2():
         msg = msg + u'1小时变化：{0}%\n'.format(strjson[0]['percent_change_1h'])
         msg = msg + u'24小时变化：{0}%\n'.format(strjson[0]['percent_change_24h'])
         msg = msg + u'7天变化：{0}%'.format(strjson[0]['percent_change_7d'])
-        print msg
+        #print msg
         return msg
     except:
         return u'服务异常'
@@ -101,7 +101,8 @@ def get_m2():
         return u'服务异常'
 
 def cronBTCInfo():
-    get_eos2()
+    msg = get_eos2()
+    bot.send_message(chat_id=538661911,text=msg)
 
 @bot.message_handler(commands=commonds)
 def handle_commands(message):
@@ -136,13 +137,13 @@ class Config(object):
     JOBS = [
         {
             'id':'eosinfo',
-            'func':'TelegramBot:get_eos2',
+            'func':'TelegramBot:cronBTCInfo',
             'args':None,
             'trigger':{
                 'type':'cron',
                 'day_of_week': '0-6',
-                'hour': '10',
-                'minute': 0,
+                'hour': '15',
+                'minute': 25,
                 'second': 0,
             },
 
@@ -151,20 +152,20 @@ class Config(object):
 
     SCHEDULER_API_ENABLED = True
 
+app = flask.Flask(__name__)
+api = Api(app)
+api.add_resource(telegramWebhook, '/webhook')
+bot.remove_webhook()
+time.sleep(0.1)
+bot.set_webhook(url=config['WEBHOOK'])
+app.config.from_object(Config())
+scheduler = APScheduler()
+scheduler.init_app(app)
+scheduler.start()
 
 if __name__ == '__main__':
-    app = flask.Flask(__name__)
-    api = Api(app)
-    api.add_resource(telegramWebhook, '/webhook')
-    bot.remove_webhook()
-    time.sleep(0.1)
-    bot.set_webhook(url=config['WEBHOOK'])
-    app.config.from_object(Config())
-    scheduler = APScheduler()
-    scheduler.init_app(app)
-    scheduler.start()
     app.run(
-        #debug=True
+    #debug=True
     #host='0.0.0.0' ,
     #port=config['PORT'],
     #ssl_context=(config['SSLPEM'], config['SSLKEY'])
